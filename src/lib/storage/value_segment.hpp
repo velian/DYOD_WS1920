@@ -29,7 +29,7 @@ class ValueSegment : public BaseSegment {
 
  protected:
   // Implementation goes here
-  std::vector<T> dataVector;
+  std::vector<T> _values;
 };
 
 }  // namespace opossum

@@ -19,7 +19,7 @@ void Chunk::add_segment(std::shared_ptr<BaseSegment> segment) {
 }
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
-	Assert(values.size() == _segments.size(), "Incorrect Data rows vs segment Rows");
+	DebugAssert(values.size() == _segments.size(), "Incorrect Data rows vs segment Rows");
 	for (size_t curSeg = 0; curSeg < _segments.size(); curSeg++){
 		_segments[curSeg]->append(values[curSeg]);
 	}

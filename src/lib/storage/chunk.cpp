@@ -27,7 +27,6 @@ void Chunk::append(const std::vector<AllTypeVariant>& values) {
 }
 
 std::shared_ptr<BaseSegment> Chunk::get_segment(ColumnID column_id) const {
-  // Shouldn't this be segment ID? 
   return _segments[column_id];
 }
 

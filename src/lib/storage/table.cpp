@@ -67,4 +67,9 @@ const Chunk& Table::get_chunk(ChunkID chunk_id) const { return *_chunks.at(chunk
 
 void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 
+void Table::emplace_chunk(Chunk chunk) {
+  _chunks.clear();
+  std::shared_ptr<Chunk> new_chunk = std::make_shared<Chunk> (std::move(chunk));
+  _chunks.push_back(new_chunk);
+}
 }  // namespace opossum

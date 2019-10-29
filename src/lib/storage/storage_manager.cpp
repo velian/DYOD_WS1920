@@ -1,10 +1,10 @@
 #include "storage_manager.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <algorithm>
 
 #include "utils/assert.hpp"
 
@@ -17,42 +17,36 @@ StorageManager& StorageManager::get() {
 
 void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
   Assert(has_table(name) == false, "Table already exists");
-  _tableMap[name] = table;
+  _table_map[name] = table;
 }
 
 void StorageManager::drop_table(const std::string& name) {
   Assert(has_table(name), "Table cannot be dropped: It does not exist");
-  _tableMap.erase(name);
+  _table_map.erase(name);
 }
 
 std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
   Assert(has_table(name), "Table Cannot be retrieved: It does not exist");
-  return _tableMap.at(name);
+  return _table_map.at(name);
 }
 
-bool StorageManager::has_table(const std::string& name) const {
-  return _tableMap.count(name);
-}
+bool StorageManager::has_table(const std::string& name) const { return _table_map.count(name); }
 
 std::vector<std::string> StorageManager::table_names() const {
   std::vector<std::string> names;
-  for (auto const& name : _tableMap){
+  for (auto const& name : _table_map) {
     names.push_back(name.first);
   }
   return names;
 }
 
 void StorageManager::print(std::ostream& out) const {
-  for (auto const& tuple : _tableMap){
-    out << tuple.first 
-    + " #Columns : " + std::to_string(tuple.second->column_count())
-    + " #Rows " + std::to_string(tuple.second->row_count())
-    + "#Chunks" + std::to_string(tuple.second->chunk_count());
+  for (auto const& tuple : _table_map) {
+    out << tuple.first + " #Columns : " + std::to_string(tuple.second->column_count()) + " #Rows " +
+               std::to_string(tuple.second->row_count()) + "#Chunks" + std::to_string(tuple.second->chunk_count());
   }
 }
 
-void StorageManager::reset() {
-  _tableMap.clear();
-}
+void StorageManager::reset() { _table_map.clear(); }
 
 }  // namespace opossum

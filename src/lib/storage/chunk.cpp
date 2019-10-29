@@ -14,33 +14,25 @@
 
 namespace opossum {
 
-void Chunk::add_segment(std::shared_ptr<BaseSegment> segment) {
-  _segments.push_back(segment);
-}
+void Chunk::add_segment(std::shared_ptr<BaseSegment> segment) { _segments.push_back(segment); }
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
-	DebugAssert(values.size() == _segments.size(), "Incorrect Data rows vs segment Rows");
-	for (size_t curSeg = 0; curSeg < _segments.size(); curSeg++){
-		_segments[curSeg]->append(values[curSeg]);
-	}
-  
+  DebugAssert(values.size() == _segments.size(), "Incorrect Data rows vs segment Rows");
+  for (size_t curSeg = 0; curSeg < _segments.size(); curSeg++) {
+    _segments[curSeg]->append(values.at(curSeg));
+  }
 }
 
-std::shared_ptr<BaseSegment> Chunk::get_segment(ColumnID column_id) const {
-  return _segments.at(column_id);
-}
+std::shared_ptr<BaseSegment> Chunk::get_segment(ColumnID column_id) const { return _segments.at(column_id); }
 
-uint16_t Chunk::column_count() const {
-  return _segments.size();
-}
+uint16_t Chunk::column_count() const { return _segments.size(); }
 
 uint32_t Chunk::size() const {
-	if (column_count() > 0){
-  		return _segments.front()->size();
-  	}
-  	else{
-  	return 0;
-  	}
+  if (column_count() > 0) {
+    return _segments.front()->size();
+  } else {
+    return 0;
+  }
 }
 
 }  // namespace opossum

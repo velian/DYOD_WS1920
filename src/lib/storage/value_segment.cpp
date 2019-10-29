@@ -32,7 +32,7 @@ size_t ValueSegment<T>::size() const {
 
 template <typename T>
 const std::vector<T>& ValueSegment<T>::values() const {
-    return _values;
+  return _values;
 }
 
 EXPLICITLY_INSTANTIATE_DATA_TYPES(ValueSegment);

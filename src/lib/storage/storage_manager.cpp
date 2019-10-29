@@ -43,7 +43,12 @@ std::vector<std::string> StorageManager::table_names() const {
 }
 
 void StorageManager::print(std::ostream& out) const {
-  // Implementation goes here
+  for (auto const& tuple : _tableMap){
+    out << tuple.first 
+    + " #Columns : " + std::to_string(tuple.second->column_count())
+    + " #Rows " + std::to_string(tuple.second->row_count())
+    + "#Chunks" + std::to_string(tuple.second->chunk_count());
+  }
 }
 
 void StorageManager::reset() {

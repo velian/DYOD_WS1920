@@ -75,4 +75,7 @@ void Table::emplace_chunk(Chunk chunk) {
   // std::shared_ptr<Chunk> new_chunk = std::make_shared<Chunk>(std::move(chunk));
   // _chunks.push_back(new_chunk);
 }
+
+void Table::compress_chunk(ChunkID chunk_id) { throw std::runtime_error("Implement Table::compress_chunk"); }
+
 }  // namespace opossum

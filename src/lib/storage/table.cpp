@@ -66,8 +66,6 @@ Chunk& Table::get_chunk(ChunkID chunk_id) { return *_chunks.at(chunk_id); }
 
 const Chunk& Table::get_chunk(ChunkID chunk_id) const { return *_chunks.at(chunk_id); }
 
-void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
-
 void Table::emplace_chunk(Chunk chunk) {
   // todo: This methid does not work as intended it clears out everything instead of emplacing
   //  find out what happens if the last chunk in the table is non empty
@@ -75,6 +73,8 @@ void Table::emplace_chunk(Chunk chunk) {
   // std::shared_ptr<Chunk> new_chunk = std::make_shared<Chunk>(std::move(chunk));
   // _chunks.push_back(new_chunk);
 }
+
+void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 
 void Table::compress_chunk(ChunkID chunk_id) { throw std::runtime_error("Implement Table::compress_chunk"); }
 

@@ -1,5 +1,6 @@
 #include "storage_manager.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -10,38 +11,42 @@
 namespace opossum {
 
 StorageManager& StorageManager::get() {
-  return *(new StorageManager());
-  // A really hacky fix to get the tests to run - replace this with your implementation
+  static StorageManager instance;
+  return instance;
 }
 
 void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
-  // Implementation goes here
+  Assert(!has_table(name), "Table already exists");
+  _table_map[name] = table;
 }
 
 void StorageManager::drop_table(const std::string& name) {
-  // Implementation goes here
+  Assert(has_table(name), "Table cannot be dropped: It does not exist");
+  _table_map.erase(name);
 }
 
 std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
-  // Implementation goes here
-  return nullptr;
+  DebugAssert(has_table(name), "Table Cannot be retrieved: It does not exist");
+  return _table_map.at(name);
 }
 
-bool StorageManager::has_table(const std::string& name) const {
-  // Implementation goes here
-  return false;
-}
+bool StorageManager::has_table(const std::string& name) const { return _table_map.count(name); }
 
 std::vector<std::string> StorageManager::table_names() const {
-  throw std::runtime_error("Implement StorageManager::table_names");
+  std::vector<std::string> names;
+  for (const auto& name : _table_map) {
+    names.push_back(name.first);
+  }
+  return names;
 }
 
 void StorageManager::print(std::ostream& out) const {
-  // Implementation goes here
+  for (auto const& tuple : _table_map) {
+    out << tuple.first << " #Columns : " << std::to_string(tuple.second->column_count()) << " #Rows "
+        << std::to_string(tuple.second->row_count()) << "#Chunks" << std::to_string(tuple.second->chunk_count());
+  }
 }
 
-void StorageManager::reset() {
-  // Implementation goes here;
-}
+void StorageManager::reset() { _table_map.clear(); }
 
 }  // namespace opossum

@@ -48,9 +48,8 @@ uint64_t Table::row_count() const { return ((_chunks.size() - 1) * _chunk_size +
 ChunkID Table::chunk_count() const { return ChunkID{_chunks.size()}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
-  // pretty ugly unsure how to make better
-  Assert(find(_column_names.begin(), _column_names.end(), column_name) != _column_names.end(), "Column Name Incorrect");
-  return ColumnID{distance(_column_names.begin(), find(_column_names.begin(), _column_names.end(), column_name))};
+  Assert(_column_names.contains(column_name), "Column Name Incorrect");
+  return ColumnID{std::distance(_column_names.begin(), column_name)};
 }
 
 uint32_t Table::max_chunk_size() const { return _chunk_size; }

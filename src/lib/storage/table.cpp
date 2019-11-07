@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -48,8 +49,9 @@ uint64_t Table::row_count() const { return ((_chunks.size() - 1) * _chunk_size +
 ChunkID Table::chunk_count() const { return ChunkID{_chunks.size()}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
-  Assert(_column_names.contains(column_name), "Column Name Incorrect");
-  return ColumnID{std::distance(_column_names.begin(), column_name)};
+  // todo : Verify what instrucotr meant with C++20 solution: (unordered_)map::contains
+  Assert(find(_column_names.begin(), _column_names.end(), column_name) != _column_names.end(), "Column Name Incorrect");
+  return ColumnID{std::distance(_column_names.begin(), find(_column_names.begin(), _column_names.end(), column_name))};
 }
 
 uint32_t Table::max_chunk_size() const { return _chunk_size; }
@@ -67,8 +69,10 @@ const Chunk& Table::get_chunk(ChunkID chunk_id) const { return *_chunks.at(chunk
 void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 
 void Table::emplace_chunk(Chunk chunk) {
-  _chunks.clear();
-  std::shared_ptr<Chunk> new_chunk = std::make_shared<Chunk>(std::move(chunk));
-  _chunks.push_back(new_chunk);
+  // todo: This methid does not work as intended it clears out everything instead of emplacing
+  //  find out what happens if the last chunk in the table is non empty
+  // _chunks.clear();
+  // std::shared_ptr<Chunk> new_chunk = std::make_shared<Chunk>(std::move(chunk));
+  // _chunks.push_back(new_chunk);
 }
 }  // namespace opossum

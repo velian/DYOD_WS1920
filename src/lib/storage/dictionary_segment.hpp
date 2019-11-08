@@ -53,7 +53,7 @@ class DictionarySegment : public BaseSegment {
 
   // return the value represented by a given ValueID
   const T& value_by_value_id(ValueID value_id) const{
-    return _dictionary.at(_attribute_vector.get(value_id))
+    return _dictionary.at(_attribute_vector.get(value_id));
   }
 
   // returns the first value ID that refers to a value >= the search value

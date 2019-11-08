@@ -34,16 +34,22 @@ class DictionarySegment : public BaseSegment {
   AllTypeVariant operator[](const ChunkOffset chunk_offset) const override;
 
   // return the value at a certain position.
-  T get(const size_t chunk_offset) const;
+  T get(const size_t chunk_offset) const{
+
+  }
 
   // dictionary segments are immutable
   void append(const AllTypeVariant&) override;
 
   // returns an underlying dictionary
-  std::shared_ptr<const std::vector<T>> dictionary() const;
+  std::shared_ptr<const std::vector<T>> dictionary() const{
+    return _dictionary;
+  }
 
   // returns an underlying data structure
-  std::shared_ptr<const BaseAttributeVector> attribute_vector() const;
+  std::shared_ptr<const BaseAttributeVector> attribute_vector() const{
+    return _attribute_vector;
+  }
 
   // return the value represented by a given ValueID
   const T& value_by_value_id(ValueID value_id) const;

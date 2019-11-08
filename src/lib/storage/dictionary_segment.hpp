@@ -25,7 +25,17 @@ class DictionarySegment : public BaseSegment {
   /**
    * Creates a Dictionary segment from a given value segment.
    */
-  explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment);
+  explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment){
+
+    _dictionary = base_segment->values();
+    std::sort(_dictionary->begin(), _dictionary->end());
+    _dictionary->erase(std::unique(_dictionary->begin(), _dictionary->end()), _dictionary->end());
+
+    for(const auto& value : base_segment.values()){
+      _attribute_vector->push_back(std::distance(_dictionary->begin(), std::find(_dictionary->begin(), _dictionary->end(), value)));
+    }
+
+  }
 
   // SEMINAR INFORMATION: Since most of these methods depend on the template parameter, you will have to implement
   // the DictionarySegment in this file. Replace the method signatures with actual implementations.
@@ -35,7 +45,7 @@ class DictionarySegment : public BaseSegment {
 
   // return the value at a certain position.
   T get(const size_t chunk_offset) const{
-    _dictionary.at(chunk_offset);
+    return value_by_value_id(_attribute_vector->at(chunk_offset));
   }
 
   // dictionary segments are immutable
@@ -53,7 +63,7 @@ class DictionarySegment : public BaseSegment {
 
   // return the value represented by a given ValueID
   const T& value_by_value_id(ValueID value_id) const{
-    return _dictionary.at(_attribute_vector.get(value_id));
+    return _dictionary->at(value_id);
   }
 
   // returns the first value ID that refers to a value >= the search value
@@ -71,17 +81,21 @@ class DictionarySegment : public BaseSegment {
   ValueID upper_bound(const AllTypeVariant& value) const;
 
   // return the number of unique_values (dictionary entries)
-  size_t unique_values_count() const;
+  size_t unique_values_count() const{
+    return _dictionary->size();
+  }
 
   // return the number of entries
-  size_t size() const override;
+  size_t size() const override{
+    return _attribute_vector->size();
+  }
 
   // returns the calculated memory usage
   size_t estimate_memory_usage() const final;
 
  protected:
   std::shared_ptr<std::vector<T>> _dictionary;
-  std::shared_ptr<BaseAttributeVector> _attribute_vector;
+  std::shared_ptr<std::vector<uint32_t>> _attribute_vector;
 };
 
 }  // namespace opossum

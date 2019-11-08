@@ -35,7 +35,7 @@ class DictionarySegment : public BaseSegment {
 
   // return the value at a certain position.
   T get(const size_t chunk_offset) const{
-
+    _dictionary.at(chunk_offset);
   }
 
   // dictionary segments are immutable
@@ -52,7 +52,9 @@ class DictionarySegment : public BaseSegment {
   }
 
   // return the value represented by a given ValueID
-  const T& value_by_value_id(ValueID value_id) const;
+  const T& value_by_value_id(ValueID value_id) const{
+    return _dictionary.at(_attribute_vector.get(value_id))
+  }
 
   // returns the first value ID that refers to a value >= the search value
   // returns INVALID_VALUE_ID if all values are smaller than the search value

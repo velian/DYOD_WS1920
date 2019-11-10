@@ -8,6 +8,7 @@
 
 #include "all_type_variant.hpp"
 #include "types.hpp"
+#include "fixed_size_attribute_vector.hpp"
 
 namespace opossum {
 
@@ -27,12 +28,19 @@ class DictionarySegment : public BaseSegment {
    */
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment){
 
-    _dictionary = base_segment->values();
+    auto segment = std::dynamic_pointer_cast<ValueSegment<T>>(base_segment);
+    auto segment_values = segment->values();
+
+    //create dictionary
+    _dictionary = std::make_shared<std::vector<T>> (segment_values);
     std::sort(_dictionary->begin(), _dictionary->end());
     _dictionary->erase(std::unique(_dictionary->begin(), _dictionary->end()), _dictionary->end());
 
-    for(const auto& value : base_segment.values()){
-      _attribute_vector->push_back(std::distance(_dictionary->begin(), std::find(_dictionary->begin(), _dictionary->end(), value)));
+    //create attribute vector
+    _attribute_vector = std::make_shared<FixedSizeAttributeVector<uint32_t>> (segment->size());
+    for(ValueID position(0); position < segment->size(); position++) {
+      auto value_id = ValueID(std::distance(_dictionary->begin(), std::find(_dictionary->begin(), _dictionary->end(), segment_values.at(position))));
+      _attribute_vector->set(position, value_id);
     }
 
   }
@@ -41,15 +49,18 @@ class DictionarySegment : public BaseSegment {
   // the DictionarySegment in this file. Replace the method signatures with actual implementations.
 
   // return the value at a certain position. If you want to write efficient operators, back off!
-  AllTypeVariant operator[](const ChunkOffset chunk_offset) const override;
+  AllTypeVariant operator[](const ChunkOffset chunk_offset) const override {
+    return _dictionary->at(_attribute_vector->get(chunk_offset));
+  }
 
   // return the value at a certain position.
   T get(const size_t chunk_offset) const{
-    return value_by_value_id(_attribute_vector->at(chunk_offset));
+    return value_by_value_id(ValueID(_attribute_vector->get(chunk_offset)));
   }
 
   // dictionary segments are immutable
-  void append(const AllTypeVariant&) override;
+  void append(const AllTypeVariant&) override {
+  }
 
   // returns an underlying dictionary
   std::shared_ptr<const std::vector<T>> dictionary() const{
@@ -68,17 +79,33 @@ class DictionarySegment : public BaseSegment {
 
   // returns the first value ID that refers to a value >= the search value
   // returns INVALID_VALUE_ID if all values are smaller than the search value
-  ValueID lower_bound(T value) const;
+  ValueID lower_bound(T value) const {
+    auto lower_bound = std::lower_bound(_dictionary->begin(), _dictionary->end(), value);
+    if(lower_bound == _dictionary->end()) {
+      return INVALID_VALUE_ID;
+    }
+    return ValueID(std::distance(_dictionary->begin(), lower_bound));
+  }
 
   // same as lower_bound(T), but accepts an AllTypeVariant
-  ValueID lower_bound(const AllTypeVariant& value) const;
+  ValueID lower_bound(const AllTypeVariant& value) const {
+    return lower_bound(static_cast<T> (value));
+  }
 
   // returns the first value ID that refers to a value > the search value
   // returns INVALID_VALUE_ID if all values are smaller than or equal to the search value
-  ValueID upper_bound(T value) const;
+  ValueID upper_bound(T value) const {
+    auto upper_bound = std::upper_bound(_dictionary->begin(), _dictionary->end(), value);
+    if(upper_bound == _dictionary->end()) {
+      return INVALID_VALUE_ID;
+    }
+    return ValueID(std::distance(_dictionary->begin(), upper_bound));
+  }
 
   // same as upper_bound(T), but accepts an AllTypeVariant
-  ValueID upper_bound(const AllTypeVariant& value) const;
+  ValueID upper_bound(const AllTypeVariant& value) const {
+    return upper_bound(static_cast<T> (value));
+  }
 
   // return the number of unique_values (dictionary entries)
   size_t unique_values_count() const{
@@ -91,11 +118,13 @@ class DictionarySegment : public BaseSegment {
   }
 
   // returns the calculated memory usage
-  size_t estimate_memory_usage() const final;
+  size_t estimate_memory_usage() const final {
+    return 0;
+  }
 
  protected:
   std::shared_ptr<std::vector<T>> _dictionary;
-  std::shared_ptr<std::vector<uint32_t>> _attribute_vector;
+  std::shared_ptr<BaseAttributeVector> _attribute_vector;
 };
 
 }  // namespace opossum

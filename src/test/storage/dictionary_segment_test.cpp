@@ -59,3 +59,22 @@
  }
 
 // TODO(student): You should add some more tests here (full coverage would be appreciated) and possibly in other files.
+
+ TEST_F(StorageDictionarySegmentTest, MemoryUsage) {
+   vc_int->append(1);
+   auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("int", vc_int);
+   auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int>>(col);
+
+   //expect 4 bytes for int in dictionary and one byte in attribute vector
+   EXPECT_EQ(dict_col->estimate_memory_usage(), size_t{5});
+ }
+
+ TEST_F(StorageDictionarySegmentTest, MemoryUsageAttributeVector) {
+   vc_int->append(1);
+   vc_int->append(1);
+   auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("int", vc_int);
+   auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int>>(col);
+
+   //expect 4 bytes for int in dictionary and two bytes in attribute vector
+   EXPECT_EQ(dict_col->estimate_memory_usage(), size_t{6});
+ }

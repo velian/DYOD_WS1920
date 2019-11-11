@@ -77,11 +77,11 @@ void Table::emplace_chunk(Chunk chunk) {
 
 void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 
-void Table::compress_chunk(ChunkID chunk_id) { 
+void Table::compress_chunk(ChunkID chunk_id) {
   const auto& uncompressed_chunk = get_chunk(chunk_id);
   Chunk compressed_chunk = Chunk();
 
-  u_int32_t number_of_segments = uncompressed_chunk.size;
+  uint32_t number_of_segments = uncompressed_chunk.size();
   for (ColumnID segment_ID = ColumnID{0}; segment_ID < number_of_segments; segment_ID++) {
     std::shared_ptr<BaseSegment> value_segment = uncompressed_chunk.get_segment(segment_ID);
     //std::shared_ptr<BaseSegment> dictionary_segment = DictionarySegment(value_segment);

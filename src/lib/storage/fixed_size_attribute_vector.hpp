@@ -18,7 +18,7 @@ class FixedSizeAttributeVector : public BaseAttributeVector {
 
   // sets the value id at a given position
   void set(const size_t i, const ValueID value_id) override {
-     _attribute_vector[i] = value_id;
+     _attribute_vector.at(i) = value_id;
   }
 
   // returns the number of values

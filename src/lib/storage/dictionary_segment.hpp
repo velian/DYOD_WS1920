@@ -36,8 +36,18 @@ class DictionarySegment : public BaseSegment {
     std::sort(_dictionary->begin(), _dictionary->end());
     _dictionary->erase(std::unique(_dictionary->begin(), _dictionary->end()), _dictionary->end());
 
-    //create attribute vector
-    _attribute_vector = std::make_shared<FixedSizeAttributeVector<uint32_t>> (segment->size());
+    //create attribute vector with minimal width
+    if(unique_values_count() <= UINT8_MAX) {
+      _attribute_vector = std::make_shared<FixedSizeAttributeVector<uint8_t>> (segment->size());
+    }
+    else if(unique_values_count() <= UINT16_MAX) {
+      _attribute_vector = std::make_shared<FixedSizeAttributeVector<uint16_t>> (segment->size());
+    }
+    else {
+      _attribute_vector = std::make_shared<FixedSizeAttributeVector<uint32_t>> (segment->size());
+    }
+
+    //fill attribute vector with valueIDs
     for(ValueID position(0); position < segment->size(); position++) {
       auto value_id = ValueID(std::distance(_dictionary->begin(), std::find(_dictionary->begin(), _dictionary->end(), segment_values.at(position))));
       _attribute_vector->set(position, value_id);

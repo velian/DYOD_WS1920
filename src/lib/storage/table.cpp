@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <thread>
 
 #include "value_segment.hpp"
 
@@ -80,14 +81,30 @@ void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 void Table::compress_chunk(ChunkID chunk_id) {
   const auto& uncompressed_chunk = get_chunk(chunk_id);
   std::shared_ptr<Chunk> compressed_chunk = std::make_shared<Chunk>();
+  std::vector<std::thread> thread_vector(uncompressed_chunk.size());
 
-  uint32_t number_of_segments = uncompressed_chunk.size();
+  auto number_of_segments = uncompressed_chunk.size();
+
+  //consider doing this with futures instead but I do not fully comprehend them
+  auto compress_segment = [](const ColumnID segment_ID, const std::shared_ptr<BaseSegment> value_segment, 
+                              const std::string column_type) {
+    auto dictionary_segment = make_shared_by_data_type<BaseSegment, DictionarySegment>(column_type, value_segment);
+    return dictionary_segment;
+  };
+
   for (ColumnID segment_ID = ColumnID{0}; segment_ID < number_of_segments; segment_ID++) {
     std::shared_ptr<BaseSegment> value_segment = uncompressed_chunk.get_segment(segment_ID);
-    auto dictionary_segment = make_shared_by_data_type<BaseSegment, DictionarySegment>(column_type(segment_ID), value_segment);
-
-    compressed_chunk->add_segment(dictionary_segment);
+    thread_vector[segment_ID] = std::thread(compress_segment, segment_ID, value_segment, column_type(segment_ID));
   }
+
+  for(auto thread_id = ColumnID{0}; thread_id < thread_vector.size(); thread_id++){
+    thread_vector[thread_id].join();
+  }
+
+  for(auto thread_id = ColumnID{0}; thread_id < thread_vector.size(); thread_id++){
+    // todo -> add to new chunk 
+  }
+
   _chunks[chunk_id] = compressed_chunk;
  }
 

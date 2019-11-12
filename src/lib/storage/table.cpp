@@ -79,16 +79,16 @@ void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 
 void Table::compress_chunk(ChunkID chunk_id) {
   const auto& uncompressed_chunk = get_chunk(chunk_id);
-  Chunk compressed_chunk = Chunk();
+  std::shared_ptr<Chunk> compressed_chunk = std::make_shared<Chunk>();
 
   uint32_t number_of_segments = uncompressed_chunk.size();
   for (ColumnID segment_ID = ColumnID{0}; segment_ID < number_of_segments; segment_ID++) {
     std::shared_ptr<BaseSegment> value_segment = uncompressed_chunk.get_segment(segment_ID);
     auto dictionary_segment = make_shared_by_data_type<BaseSegment, DictionarySegment>(column_type(segment_ID), value_segment);
 
-    compressed_chunk.add_segment(dictionary_segment);
+    compressed_chunk->add_segment(dictionary_segment);
   }
-  _chunks[chunk_id] = std::move(std::make_shared<Chunk>(compressed_chunk));
+  _chunks[chunk_id] = compressed_chunk;
  }
 
 }  // namespace opossum

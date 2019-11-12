@@ -76,6 +76,9 @@ class Table : private Noncopyable {
   // note this is slow and not thread-safe and should be used for testing purposes only
   void append(std::vector<AllTypeVariant> values);
 
+  // compresses a single value_segment for multithreading
+  void compress_segment(const opossum::Chunk uncompressed_chunk, std::shared_ptr<Chunk> compressed_chunk, ColumnID segment_ID);
+
   // compresses a ValueColumn into a DictionaryColumn
   void compress_chunk(ChunkID chunk_id);
 

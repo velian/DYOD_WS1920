@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <thread>
 
 #include "value_segment.hpp"
 
@@ -77,16 +78,21 @@ void Table::emplace_chunk(Chunk chunk) {
 
 void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 
+void Table::compress_segment(std::shared_ptr<BaseSegment> value_segment, std::shared_ptr<Chunk> compressed_chunk) {
+  auto dictionary_segment = make_shared_by_data_type<BaseSegment, DictionarySegment>(column_type(segment_ID), value_segment);
+  compressed_chunk->add_segment(dictionary_segment);
+}
+
 void Table::compress_chunk(ChunkID chunk_id) {
   const auto& uncompressed_chunk = get_chunk(chunk_id);
   std::shared_ptr<Chunk> compressed_chunk = std::make_shared<Chunk>();
+  std::vector<std::thread> thread_vector;
 
   uint32_t number_of_segments = uncompressed_chunk.size();
   for (ColumnID segment_ID = ColumnID{0}; segment_ID < number_of_segments; segment_ID++) {
     std::shared_ptr<BaseSegment> value_segment = uncompressed_chunk.get_segment(segment_ID);
-    auto dictionary_segment = make_shared_by_data_type<BaseSegment, DictionarySegment>(column_type(segment_ID), value_segment);
-
-    compressed_chunk->add_segment(dictionary_segment);
+    std::thread segment_thread (compress_segment, value_segment, compressed_chunk);
+    thread_vector.push_back(segment_thread);
   }
   _chunks[chunk_id] = compressed_chunk;
  }

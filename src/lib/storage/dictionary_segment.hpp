@@ -1,11 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <algorithm>
 
 #include "all_type_variant.hpp"
 #include "fixed_size_attribute_vector.hpp"

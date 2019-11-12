@@ -93,20 +93,20 @@ void Table::compress_chunk(ChunkID chunk_id) {
                                                const std::shared_ptr<BaseSegment> value_segment,
                                                const std::string column_type) {
     auto dictionary_segment = make_shared_by_data_type<BaseSegment, DictionarySegment>(column_type, value_segment);
-    complete_segments[segment_ID] = dictionary_segment;
+    complete_segments.at(segment_ID) = dictionary_segment;
   };
 
   for (ColumnID segment_ID = ColumnID{0}; segment_ID < number_of_segments; segment_ID++) {
     std::shared_ptr<BaseSegment> value_segment = uncompressed_chunk.get_segment(segment_ID);
-    thread_vector[segment_ID] = std::thread(compress_segment, segment_ID, value_segment, column_type(segment_ID));
+    thread_vector.at(segment_ID) = std::thread(compress_segment, segment_ID, value_segment, column_type(segment_ID));
   }
 
   for (auto thread_id = ColumnID{0}; thread_id < thread_vector.size(); thread_id++) {
-    thread_vector[thread_id].join();
+    thread_vector.at(thread_id).join();
   }
 
   for (auto compressed_id = ColumnID{0}; compressed_id < complete_segments.size(); compressed_id++) {
-    compressed_chunk->add_segment(complete_segments[compressed_id]);
+    compressed_chunk->add_segment(complete_segments.at(compressed_id));
   }
   compression_mutex.lock();
   _chunks[chunk_id] = compressed_chunk;

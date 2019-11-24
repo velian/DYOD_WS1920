@@ -20,6 +20,10 @@ namespace opossum {
 
 Table::Table(const uint32_t chunk_size) : _chunk_size(chunk_size) { _add_chunk(); }
 
+void Table::add_column_definition(const std::string& name, const std::string& type) {
+  // Implementation goes here
+}
+
 void Table::add_column(const std::string& name, const std::string& type) {
   Assert(_chunks.front()->size() == 0, "Data is present, cannot add Column");
 
@@ -37,6 +41,10 @@ void Table::append(std::vector<AllTypeVariant> values) {
     }
   }
   _chunks.back()->append(values);
+}
+
+void Table::create_new_chunk() {
+  // Implementation goes here
 }
 
 uint16_t Table::column_count() const {
@@ -77,5 +85,9 @@ void Table::emplace_chunk(Chunk chunk) {
 }
 
 void Table::compress_chunk(ChunkID chunk_id) { throw std::runtime_error("Implement Table::compress_chunk"); }
+
+void emplace_chunk(Chunk chunk) {
+  // Implementation goes here
+}
 
 }  // namespace opossum

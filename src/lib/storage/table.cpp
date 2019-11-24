@@ -54,12 +54,12 @@ uint16_t Table::column_count() const {
 
 uint64_t Table::row_count() const { return ((_chunks.size() - 1) * _chunk_size + _chunks.back()->size()); }
 
-ChunkID Table::chunk_count() const { return ChunkID{_chunks.size()}; }
+ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
   // todo : Verify what instrucotr meant with C++20 solution: (unordered_)map::contains
   Assert(find(_column_names.begin(), _column_names.end(), column_name) != _column_names.end(), "Column Name Incorrect");
-  return ColumnID{std::distance(_column_names.begin(), find(_column_names.begin(), _column_names.end(), column_name))};
+  return ColumnID{static_cast<uint16_t>(std::distance(_column_names.begin(), find(_column_names.begin(), _column_names.end(), column_name)))};
 }
 
 uint32_t Table::max_chunk_size() const { return _chunk_size; }

@@ -65,13 +65,9 @@ class DictionarySegment : public BaseSegment {
   T get(const size_t chunk_offset) const { return value_by_value_id(ValueID(_attribute_vector->get(chunk_offset))); }
 
   // dictionary segments are immutable
-<<<<<<< HEAD
   void append(const AllTypeVariant&) override {
     throw std::runtime_error("Tried to call append() on immutable dictionary segment");
   }
-=======
-  void append(const AllTypeVariant&) override {}
->>>>>>> 4a92231e7dd69875de9b405ba2a54cfdbbea5e97
 
   // returns an underlying dictionary
   std::shared_ptr<const std::vector<T>> dictionary() const { return _dictionary; }

@@ -29,6 +29,7 @@ class DictionarySegment : public BaseSegment {
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment){
 
     auto segment = std::dynamic_pointer_cast<ValueSegment<T>>(base_segment);
+    DebugAssert(segment, "Invalid base segment for dictionary segment");
     auto segment_values = segment->values();
 
     //create dictionary
@@ -48,8 +49,8 @@ class DictionarySegment : public BaseSegment {
     }
 
     //fill attribute vector with valueIDs
-    for(ValueID position(0); position < segment->size(); position++) {
-      auto value_id = ValueID(std::distance(_dictionary->begin(), std::find(_dictionary->begin(), _dictionary->end(), segment_values.at(position))));
+    for(size_t position = 0; position < segment->size(); position++) {
+      auto value_id = ValueID(std::distance(_dictionary->begin(), std::lower_bound(_dictionary->begin(), _dictionary->end(), segment_values[position])));
       _attribute_vector->set(position, value_id);
     }
 
@@ -70,6 +71,7 @@ class DictionarySegment : public BaseSegment {
 
   // dictionary segments are immutable
   void append(const AllTypeVariant&) override {
+    throw std::runtime_error("Tried to call append() on immutable dictionary segment");
   }
 
   // returns an underlying dictionary

@@ -82,11 +82,10 @@ void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 void Table::compress_chunk(ChunkID chunk_id) {
   std::mutex compression_mutex;
   const auto& uncompressed_chunk = get_chunk(chunk_id);
+  auto number_of_segments = column_count();
   std::shared_ptr<Chunk> compressed_chunk = std::make_shared<Chunk>();
-  std::vector<std::shared_ptr<BaseSegment>> complete_segments(uncompressed_chunk.size());
-  std::vector<std::thread> thread_vector(uncompressed_chunk.size());
-
-  auto number_of_segments = uncompressed_chunk.size();
+  std::vector<std::shared_ptr<BaseSegment>> complete_segments(number_of_segments);
+  std::vector<std::thread> thread_vector(number_of_segments);
 
   // consider doing this with futures instead but I do not fully comprehend them for now i will need to modify a vector
   auto compress_segment = [&complete_segments](const ColumnID segment_ID,
@@ -106,7 +105,7 @@ void Table::compress_chunk(ChunkID chunk_id) {
   }
 
   for (auto compressed_id = ColumnID{0}; compressed_id < complete_segments.size(); compressed_id++) {
-    compressed_chunk->add_segment(complete_segments.at(compressed_id));
+    compressed_chunk->add_segment(complete_segments[compressed_id]);
   }
   compression_mutex.lock();
   _chunks[chunk_id] = compressed_chunk;

@@ -48,7 +48,7 @@ class DictionarySegment : public BaseSegment {
 
     //fill attribute vector with valueIDs
     for(size_t position = 0; position < segment->size(); position++) {
-      auto value_id = ValueID(std::distance(_dictionary->begin(), lower_bound(_dictionary->begin(), _dictionary->end(), segment_values[position])));
+      auto value_id = ValueID(std::distance(_dictionary->begin(), std::lower_bound(_dictionary->begin(), _dictionary->end(), segment_values[position])));
       _attribute_vector->set(position, value_id);
     }
   }

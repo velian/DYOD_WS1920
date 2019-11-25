@@ -40,6 +40,7 @@ namespace opossum {
    EXPECT_EQ((*dict)[1], "Bill");
    EXPECT_EQ((*dict)[2], "Hasso");
    EXPECT_EQ((*dict)[3], "Steve");
+ }
 
  TEST_F(StorageDictionarySegmentTest, LowerUpperBound) {
    for (int i = 0; i <= 10; i += 2) vc_int->append(i);

@@ -115,9 +115,9 @@ void Table::compress_chunk(ChunkID chunk_id) {
   for (auto compressed_id = ColumnID{0}; compressed_id < complete_segments.size(); compressed_id++) {
     compressed_chunk->add_segment(complete_segments[compressed_id]);
   }
-  compression_mutex.lock();
+
+  std::lock_guard<std::mutex>lock(compression_mutex);
   _chunks[chunk_id] = compressed_chunk;
-  compression_mutex.unlock();
 }
 
 void emplace_chunk(Chunk chunk) {

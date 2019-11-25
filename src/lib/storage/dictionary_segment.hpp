@@ -26,6 +26,7 @@ class DictionarySegment : public BaseSegment {
  public:
   /**
    *  Creates a Dictionary segment from a given value segment.
+   * Todo: Dictionary segment are we narrowing the constructors functionality to much? 
    */
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment) {
     auto segment = std::dynamic_pointer_cast<ValueSegment<T>>(base_segment);

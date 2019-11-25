@@ -59,7 +59,7 @@ class DictionarySegment : public BaseSegment {
 
   // return the value at a certain position. If you want to write efficient operators, back off!
   AllTypeVariant operator[](const ChunkOffset chunk_offset) const override {
-    return _dictionary->at(_attribute_vector->get(chunk_offset));
+    return value_by_value_id(ValueID(_attribute_vector->get(chunk_offset)));
   }
 
   // return the value at a certain position.

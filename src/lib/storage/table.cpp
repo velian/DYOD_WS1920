@@ -88,6 +88,7 @@ void Table::emplace_chunk(Chunk chunk) {
 void Table::_add_chunk() { _chunks.push_back(std::make_shared<Chunk>()); }
 
 void Table::compress_chunk(ChunkID chunk_id) {
+  // mutex schould be made class variable
   std::mutex compression_mutex;
   const auto& uncompressed_chunk = get_chunk(chunk_id);
   auto number_of_segments = column_count();

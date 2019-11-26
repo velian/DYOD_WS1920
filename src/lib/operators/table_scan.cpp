@@ -26,71 +26,69 @@ ScanType TableScan::scan_type() const {
 
 const AllTypeVariant& TableScan::search_value() const {
   return _search_value;
+
 }
 
-/*auto get_comparator(ScanType scanType) {
-  switch (scanType) {
-    case ScanType::OpEquals: {
-      return [](auto left, auto right) { return left == right; };
-      break;
-    }
-    case ScanType::OpNotEquals: {
-      return [](auto left, auto right) { return left != right; };
-      break;
-    }
-    case ScanType::OpLessThan: {
-      return [](auto left, auto right) { return left < right; };
-      break;
-    }
-    case ScanType::OpLessThanEquals: {
-      return [](auto left, auto right) { return left <= right; };
-      break;
-    }
-    case ScanType::OpGreaterThan: {
-      return [](auto left, auto right) { return left > right; };
-      break;
-    }
-    case ScanType::OpGreaterThanEquals: {
-      return [](auto left, auto right) { return left >= right; };
-      break;
-    }
-    //default: break;
-  }
-}*/
-
-std::shared_ptr<const Table> TableScan::_on_execute() {
-  const auto table = _input_table_left();
-  //auto comparator = get_comparator(_scan_type);
-  auto comparator = [](ScanType scanType, auto left, auto right) {
-  switch (scanType) {
-    case ScanType::OpEquals: {
+auto get_comparator(ScanType scanType) {
+  return [scanType](const auto left, const auto right) {
+    switch (scanType) {
+      case ScanType::OpEquals: {
         return left == right;
-        break;
       }
       case ScanType::OpNotEquals: {
         return left != right;
-        break;
       }
       case ScanType::OpLessThan: {
         return left < right;
-        break;
       }
       case ScanType::OpLessThanEquals: {
         return left <= right;
-        break;
       }
       case ScanType::OpGreaterThan: {
         return left > right;
-        break;
       }
       case ScanType::OpGreaterThanEquals: {
         return left >= right;
-        break;
       }
-      //default: break;
+     //bdefault: break;
     }
   };
+}
 
+/*
+auto get_comparator(ScanType scanType) {
+  switch (scanType) {
+    case ScanType::OpEquals: {
+      return [](const auto left, const auto right) -> bool { return left == right; };
+      break;
+    }
+    case ScanType::OpNotEquals: {
+      return [](const auto left, const auto right) -> bool { return left != right; };
+      break;
+    }
+    case ScanType::OpLessThan: {
+      return [](const auto left, const auto right) -> bool { return left < right; };
+      break;
+    }
+    case ScanType::OpLessThanEquals: {
+      return [](const auto left, const auto right) -> bool { return left <= right; };
+      break;
+    }
+    case ScanType::OpGreaterThan: {
+      return [](const auto left, const auto right) -> bool { return left > right; };
+      break;
+    }
+    case ScanType::OpGreaterThanEquals: {
+      return [](const auto left, const auto right) -> bool { return left >= right; };
+      break;
+    }
+   //bdefault: break;
+  }
+};
+*/
+
+std::shared_ptr<const Table> TableScan::_on_execute() {
+  const auto table = _input_table_left();
   for (ChunkID i = ChunkID(0); i < table->chunk_count(); i++) {
     const auto& chunk = table->get_chunk(i);
     const auto& segment = chunk.get_segment(_column_id);

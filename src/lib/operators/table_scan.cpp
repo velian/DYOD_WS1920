@@ -10,6 +10,7 @@
 #include "resolve_type.hpp"
 #include "table_scan.hpp"
 #include "storage/dictionary_segment.hpp"
+#include "storage/reference_segment.hpp"
 
 namespace opossum {
 
@@ -30,68 +31,13 @@ const AllTypeVariant& TableScan::search_value() const {
 
 }
 
-/*auto get_comparator(ScanType scanType) {
-  return [scanType](const auto left, const auto right) {
-    switch (scanType) {
-      case ScanType::OpEquals: {
-        return left == right;
-      }
-      case ScanType::OpNotEquals: {
-        return left != right;
-      }
-      case ScanType::OpLessThan: {
-        return left < right;
-      }
-      case ScanType::OpLessThanEquals: {
-        return left <= right;
-      }
-      case ScanType::OpGreaterThan: {
-        return left > right;
-      }
-      case ScanType::OpGreaterThanEquals: {
-        return left >= right;
-      }
-     //bdefault: break;
-    }
-  };
-}*/
-
-/*
-auto get_comparator(ScanType scanType) {
-  switch (scanType) {
-    case ScanType::OpEquals: {
-      return [](const auto left, const auto right) -> bool { return left == right; };
-      break;
-    }
-    case ScanType::OpNotEquals: {
-      return [](const auto left, const auto right) -> bool { return left != right; };
-      break;
-    }
-    case ScanType::OpLessThan: {
-      return [](const auto left, const auto right) -> bool { return left < right; };
-      break;
-    }
-    case ScanType::OpLessThanEquals: {
-      return [](const auto left, const auto right) -> bool { return left <= right; };
-      break;
-    }
-    case ScanType::OpGreaterThan: {
-      return [](const auto left, const auto right) -> bool { return left > right; };
-      break;
-    }
-    case ScanType::OpGreaterThanEquals: {
-      return [](const auto left, const auto right) -> bool { return left >= right; };
-      break;
-    }
-   //bdefault: break;
-  }
-};
-*/
-
 std::shared_ptr<const Table> TableScan::_on_execute() {
 
-  const auto table = _input_table_left();
-  // bin mir nicht sicher, wie wir das Lambda richtig ist, aber das baut zumindest grade
+  const auto in_table = _input_table_left();
+  auto out_table = std::make_shared<Table>();
+  //auto posList = std::make_shared<PosList>();
+  auto posList = PosList();
+  
   auto comparator = [](ScanType scanType, auto left, auto right) {
   switch (scanType) {
     case ScanType::OpEquals: {
@@ -118,35 +64,22 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
         return left >= right;
         break;
       }
-      //default: break;
     }
     return left > right;
   };
 
-  for (ChunkID i = ChunkID(0); i < table->chunk_count(); i++) {
-    const auto& chunk = table->get_chunk(i);
+  for (ChunkID i = ChunkID(0); i < in_table->chunk_count(); i++) {
+    const auto& chunk = in_table->get_chunk(i);
     const auto& segment = chunk.get_segment(_column_id);
-    PosList posList = PosList();
 
-    // The value vector of a ValueSegment is templated to match the
-    // data type stored in the column.
-    // That's why we use the resolve_data_type lambda expression
-    // to create a typed_segment that we can handle in the 
-    // not templated TableScan operator. (first approach in the pdf)
+    auto data_type = in_table->column_type(_column_id);
     
-    // über ColumID bei segment nachgucken, welchen Typ
-    auto data_type = table->column_type(_column_id);
-    
-    //std::vector<std::string> possible_types{"int", "long", "float", "double", "string"};
-    //for(auto data_type : possible_types) {
     resolve_data_type(data_type, [&] (auto type) {
       using Type = typename decltype(type)::type;
 
-      // is given segment a value segment?
       const auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
       if(typed_value_segment != nullptr) {
 
-        //for (auto idx = size_t(0); idx < typed_value_segment->size(); idx++) {
           auto values = typed_value_segment->values();
           for (size_t index = 0; index < values.size(); index++){
             auto value = values.at(index);
@@ -231,16 +164,17 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
           }
         }
 
-      const auto typed_ref_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
+      const auto typed_ref_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
       if(typed_ref_segment != nullptr) {
         auto pos_list_size = typed_ref_segment->pos_list()->size();
 
-        for(size_t id = 0; id < pos_list_size; id++) {
-          auto row_id = typed_ref_segment->pos_list()->at(id);
-          auto value = typed_ref_segment->referenced_table()->get_value(
-            row_id,
-            typed_ref_segment->referenced_column_id()
-          );
+        for(size_t index = 0; index < pos_list_size; index++) {
+          auto row_id = typed_ref_segment->pos_list()->at(index);
+          auto value = typed_ref_segment
+            ->referenced_table()
+            ->get_chunk(row_id.chunk_id)
+            .get_segment(typed_ref_segment->referenced_column_id())
+            ->operator[](row_id.chunk_offset);
 
           if(
               comparator(
@@ -258,8 +192,17 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
     });
   }
 
-  
-  return std::shared_ptr<const Table>();
+  auto& chunk = out_table->get_chunk(ChunkID{0});
+
+  for (auto column = ColumnID(0); column < in_table->column_count(); column++) {
+    out_table->add_column_definition(in_table->column_name(column), in_table->column_type(column));
+  }
+
+  for (auto column = ColumnID(0); column < _input_table_left()->column_count(); column++) {
+    const auto shared_segment = std::make_shared<ReferenceSegment>(in_table, column, std::make_shared<PosList>(posList));
+    chunk.add_segment(shared_segment);
+  }
+  return out_table;
 }
 
 } //namespace opossum

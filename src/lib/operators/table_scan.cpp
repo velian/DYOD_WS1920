@@ -29,7 +29,7 @@ const AllTypeVariant& TableScan::search_value() const {
 
 }
 
-auto get_comparator(ScanType scanType) {
+/*auto get_comparator(ScanType scanType) {
   return [scanType](const auto left, const auto right) {
     switch (scanType) {
       case ScanType::OpEquals: {
@@ -53,7 +53,7 @@ auto get_comparator(ScanType scanType) {
      //bdefault: break;
     }
   };
-}
+}*/
 
 /*
 auto get_comparator(ScanType scanType) {
@@ -88,10 +88,43 @@ auto get_comparator(ScanType scanType) {
 */
 
 std::shared_ptr<const Table> TableScan::_on_execute() {
+
   const auto table = _input_table_left();
+  auto comparator = [](ScanType scanType, auto left, auto right) {
+  switch (scanType) {
+    case ScanType::OpEquals: {
+        return left == right;
+        break;
+      }
+      case ScanType::OpNotEquals: {
+        return left != right;
+        break;
+      }
+      case ScanType::OpLessThan: {
+        return left < right;
+        break;
+      }
+      case ScanType::OpLessThanEquals: {
+        return left <= right;
+        break;
+      }
+      case ScanType::OpGreaterThan: {
+        return left > right;
+        break;
+      }
+      case ScanType::OpGreaterThanEquals: {
+        return left >= right;
+        break;
+      }
+      //default: break;
+    }
+  };
+
   for (ChunkID i = ChunkID(0); i < table->chunk_count(); i++) {
     const auto& chunk = table->get_chunk(i);
     const auto& segment = chunk.get_segment(_column_id);
+
+    
 
     // The value vector of a ValueSegment is templated to match the
     // data type stored in the column.
@@ -116,7 +149,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
         for (auto idx = size_t(0); idx < typed_segment->size(); idx++) {
           auto values = typed_segment->values();
           auto value = values.at(idx);
-          in_scope = comparator(_scan_type, value, type_cast<Type>search_value);
+          in_scope = comparator(scan_type(), value, type_cast<Type>search_value);
         }
       }
     });

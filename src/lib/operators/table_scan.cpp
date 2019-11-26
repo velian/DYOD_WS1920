@@ -143,17 +143,21 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
       using Type = typename decltype(type)::type;
 
       // is given segment a value segment?
-      const auto typed_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
-      if(typed_segment != nullptr) {
+      const auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
+      if(typed_value_segment != nullptr) {
         PosList posList = PosList();
 
         bool in_scope;
-        //for (auto idx = size_t(0); idx < typed_segment->size(); idx++) {
-          auto values = typed_segment->values();
-          for (auto value : values){
+        //for (auto idx = size_t(0); idx < typed_value_segment->size(); idx++) {
+          auto values = typed_value_segment->values();
+          for (ChunkOffset index = 0; index < values.size(); index++){
+            auto value = values.at(index);
             in_scope = comparator(scan_type(), value, type_cast<Type>(search_value()));
-            std::cout << in_scope << std::endl;
+            if(in_scope) {
+              posList.push_back(RowID{i, index});
+            };
           }
+          return;
           //auto& value = values.at(idx);
        // }
       }

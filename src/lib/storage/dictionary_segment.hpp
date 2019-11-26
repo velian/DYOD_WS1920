@@ -9,8 +9,8 @@
 
 #include "all_type_variant.hpp"
 #include "fixed_size_attribute_vector.hpp"
-#include "types.hpp"
 #include "type_cast.hpp"
+#include "types.hpp"
 #include "value_segment.hpp"
 
 namespace opossum {
@@ -28,7 +28,7 @@ class DictionarySegment : public BaseSegment {
  public:
   /**
    *  Creates a Dictionary segment from a given value segment.
-   * Todo: Dictionary segment are we narrowing the constructors functionality to much? 
+   * Todo(Julius): Dictionary segment are we narrowing the constructors functionality to much? 
    */
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment) {
     auto segment = std::dynamic_pointer_cast<ValueSegment<T>>(base_segment);
@@ -49,9 +49,10 @@ class DictionarySegment : public BaseSegment {
       _attribute_vector = std::make_shared<FixedSizeAttributeVector<uint32_t>>(segment->size());
     }
 
-    //fill attribute vector with valueIDs
-    for(size_t position = 0; position < segment->size(); position++) {
-      auto value_id = ValueID(std::distance(_dictionary->begin(), std::lower_bound(_dictionary->begin(), _dictionary->end(), segment_values[position])));
+    // fill attribute vector with valueIDs
+    for (size_t position = 0; position < segment->size(); position++) {
+      auto value_id = ValueID(std::distance(
+          _dictionary->begin(), std::lower_bound(_dictionary->begin(), _dictionary->end(), segment_values[position])));
       _attribute_vector->set(position, value_id);
     }
   }
@@ -108,7 +109,7 @@ class DictionarySegment : public BaseSegment {
   ValueID upper_bound(const AllTypeVariant& value) const { return upper_bound(static_cast<T>(value)); }
 
   // TODO: Replace with own function, for now it is taken from
-    //https://github.com/ramboldio/dyod1920/blob/sprint3/src/lib/storage/dictionary_segment.hpp
+  // https://github.com/ramboldio/dyod1920/blob/sprint3/src/lib/storage/dictionary_segment.hpp
   // Find value and return the exact position in dictionary
   ValueID find_in_dict(T value) const {
     auto upper_bound_ref = std::find(_dictionary->cbegin(), _dictionary->cend(), value);
@@ -119,7 +120,6 @@ class DictionarySegment : public BaseSegment {
     return static_cast<ValueID>(x);
   }
   ValueID find_in_dict(const AllTypeVariant& value) const { return find_in_dict(type_cast<T>(value)); }
-
 
   // return the number of unique_values (dictionary entries)
   size_t unique_values_count() const { return _dictionary->size(); }

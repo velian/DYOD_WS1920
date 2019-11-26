@@ -8,9 +8,7 @@ namespace opossum {
 
 GetTable::GetTable(const std::string& name) : _table_name(name) {}
 
-const std::string& GetTable::table_name() const {
-  return _table_name;
-}
+const std::string& GetTable::table_name() const { return _table_name; }
 
 std::shared_ptr<const Table> GetTable::_on_execute() {
   const auto& storage_manager = StorageManager::get();
@@ -18,4 +16,3 @@ std::shared_ptr<const Table> GetTable::_on_execute() {
 }
 
 }  // namespace opossum
-

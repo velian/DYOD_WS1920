@@ -90,6 +90,7 @@ auto get_comparator(ScanType scanType) {
 std::shared_ptr<const Table> TableScan::_on_execute() {
 
   const auto table = _input_table_left();
+  // bin mir nicht sicher, wie wir das Lambda richtig ist, aber das baut zumindest grade
   auto comparator = [](ScanType scanType, auto left, auto right) {
   switch (scanType) {
     case ScanType::OpEquals: {
@@ -118,6 +119,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
       }
       //default: break;
     }
+    return left > right;
   };
 
   for (ChunkID i = ChunkID(0); i < table->chunk_count(); i++) {
@@ -146,11 +148,14 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
         PosList posList = PosList();
 
         bool in_scope;
-        for (auto idx = size_t(0); idx < typed_segment->size(); idx++) {
+        //for (auto idx = size_t(0); idx < typed_segment->size(); idx++) {
           auto values = typed_segment->values();
-          auto value = values.at(idx);
-          in_scope = comparator(scan_type(), value, type_cast<Type>search_value);
-        }
+          for (auto value : values){
+            in_scope = comparator(scan_type(), value, type_cast<Type>(search_value()));
+            std::cout << in_scope << std::endl;
+          }
+          //auto& value = values.at(idx);
+       // }
       }
     });
     //}

@@ -10,6 +10,8 @@
 #include "all_type_variant.hpp"
 #include "fixed_size_attribute_vector.hpp"
 #include "types.hpp"
+#include "type_cast.hpp"
+#include "value_segment.hpp"
 
 namespace opossum {
 

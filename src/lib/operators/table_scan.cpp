@@ -9,6 +9,7 @@
 #include "../storage/table.hpp"
 #include "resolve_type.hpp"
 #include "table_scan.hpp"
+#include "storage/dictionary_segment.hpp"
 
 namespace opossum {
 
@@ -125,8 +126,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   for (ChunkID i = ChunkID(0); i < table->chunk_count(); i++) {
     const auto& chunk = table->get_chunk(i);
     const auto& segment = chunk.get_segment(_column_id);
-
-    
+    PosList posList = PosList();
 
     // The value vector of a ValueSegment is templated to match the
     // data type stored in the column.
@@ -145,24 +145,93 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
       // is given segment a value segment?
       const auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
       if(typed_value_segment != nullptr) {
-        PosList posList = PosList();
 
-        bool in_scope;
         //for (auto idx = size_t(0); idx < typed_value_segment->size(); idx++) {
           auto values = typed_value_segment->values();
-          for (ChunkOffset index = 0; index < values.size(); index++){
+          for (size_t index = 0; index < values.size(); index++){
             auto value = values.at(index);
-            in_scope = comparator(scan_type(), value, type_cast<Type>(search_value()));
-            if(in_scope) {
-              posList.push_back(RowID{i, index});
+            if(
+              comparator(
+                scan_type(),
+                value,
+                type_cast<Type>(search_value())
+              )
+            ) {
+              posList.emplace_back(RowID{i, ChunkOffset(index)});
             };
           }
           return;
-          //auto& value = values.at(idx);
-       // }
+      }
+
+      const auto typed_dict_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
+      if(typed_dict_segment != nullptr) {
+        auto attribute_vector = typed_dict_segment->attribute_vector();
+        ValueID size = static_cast<ValueID>(attribute_vector->size());
+
+        switch(scan_type()) {
+          case ScanType::OpEquals: {
+            auto value = typed_dict_segment->find_in_dict(search_value());
+            for (auto index = ValueID(0); index < size; index++) {
+              auto attribute = typed_dict_segment->attribute_vector()->get(i);
+              if (attribute == value){
+                posList.emplace_back(RowID({i, ChunkOffset(index)}));
+              }
+            };
+            break;
+          }
+          case ScanType::OpNotEquals: {
+            auto value = typed_dict_segment->find_in_dict(search_value());
+            for (auto index = ValueID(0); index < size; index++) {
+              auto attribute = typed_dict_segment->attribute_vector()->get(i);
+              if (attribute != value){
+                posList.emplace_back(RowID({i, ChunkOffset(index)}));
+              }
+            };
+            break;
+          }
+          case ScanType::OpLessThan: {
+            auto value = typed_dict_segment->find_in_dict(search_value());
+            for (auto index = ValueID(0); index < size; index++) {
+              auto attribute = typed_dict_segment->attribute_vector()->get(i);
+              if (attribute < value){
+                posList.emplace_back(RowID({i, ChunkOffset(index)}));
+              }
+            };
+            break;
+          }
+          case ScanType::OpLessThanEquals: {
+            auto value = typed_dict_segment->find_in_dict(search_value());
+            for (auto index = ValueID(0); index < size; index++) {
+              auto attribute = typed_dict_segment->attribute_vector()->get(i);
+              if (attribute <= value){
+                posList.emplace_back(RowID({i, ChunkOffset(index)}));
+              }
+            };
+            break;
+          }
+          case ScanType::OpGreaterThan: {
+            auto value = typed_dict_segment->find_in_dict(search_value());
+            for (auto index = ValueID(0); index < size; index++) {
+              auto attribute = typed_dict_segment->attribute_vector()->get(i);
+              if (attribute > value){
+                posList.emplace_back(RowID({i, ChunkOffset(index)}));
+              }
+            };
+            break;
+          }
+          case ScanType::OpGreaterThanEquals: {
+            auto value = typed_dict_segment->find_in_dict(search_value());
+            for (auto index = ValueID(0); index < size; index++) {
+              auto attribute = typed_dict_segment->attribute_vector()->get(i);
+              if (attribute >= value){
+                posList.emplace_back(RowID({i, ChunkOffset(index)}));
+              }
+            };
+            break;
+          }
+        }
       }
     });
-    //}
   }
 
   

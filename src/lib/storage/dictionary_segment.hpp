@@ -108,9 +108,6 @@ class DictionarySegment : public BaseSegment {
   // same as upper_bound(T), but accepts an AllTypeVariant
   ValueID upper_bound(const AllTypeVariant& value) const { return upper_bound(static_cast<T>(value)); }
 
-  // TODO: Replace with own function, for now it is taken from
-  // https://github.com/ramboldio/dyod1920/blob/sprint3/src/lib/storage/dictionary_segment.hpp
-  // Find value and return the exact position in dictionary
   ValueID find_in_dict(T value) const {
     auto upper_bound_ref = std::find(_dictionary->cbegin(), _dictionary->cend(), value);
     if (upper_bound_ref == _dictionary->cend()) {

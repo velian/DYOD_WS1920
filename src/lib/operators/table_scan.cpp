@@ -215,6 +215,30 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
             break;
           }
         }
+
+      const auto typed_ref_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
+      if(typed_ref_segment != nullptr) {
+        auto pos_list_size = typed_ref_segment->pos_list()->size();
+
+        for(size_t id = 0; id < pos_list_size; id++) {
+          auto row_id = typed_ref_segment->pos_list()->at(id);
+          auto value = typed_ref_segment->referenced_table()->get_value(
+            row_id,
+            typed_ref_segment->referenced_column_id()
+          );
+
+          if(
+              comparator(
+                scan_type(),
+                type_cast<Type>(value),
+                type_cast<Type>(search_value())
+              )
+            ) {
+              posList.emplace_back(RowID{i, ChunkOffset(index)});
+            };
+        }
+      }
+      
       }
     });
   }

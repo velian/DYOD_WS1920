@@ -3,44 +3,36 @@
 #include <string>
 #include <vector>
 
+#include "../storage/table.hpp"
 #include "abstract_operator.hpp"
 #include "all_type_variant.hpp"
-#include "types.hpp"
-#include "../storage/table.hpp"
 #include "resolve_type.hpp"
-#include "table_scan.hpp"
 #include "storage/dictionary_segment.hpp"
 #include "storage/reference_segment.hpp"
+#include "table_scan.hpp"
+#include "types.hpp"
 
 namespace opossum {
 
+TableScan::TableScan(const std::shared_ptr<const AbstractOperator> in, ColumnID column_id, const ScanType scan_type,
+                     const AllTypeVariant search_value)
+    : AbstractOperator(in, nullptr), _column_id(column_id), _scan_type(scan_type), _search_value(search_value) {}
 
-TableScan::TableScan(const std::shared_ptr<const AbstractOperator> in, ColumnID column_id, const ScanType scan_type, const AllTypeVariant search_value)
-  : AbstractOperator(in, nullptr), _column_id(column_id), _scan_type(scan_type), _search_value(search_value) {}
+ColumnID TableScan::column_id() const { return _column_id; }
 
-ColumnID TableScan::column_id() const {
-  return _column_id;
-}
+ScanType TableScan::scan_type() const { return _scan_type; }
 
-ScanType TableScan::scan_type() const {
-  return _scan_type;
-}
-
-const AllTypeVariant& TableScan::search_value() const {
-  return _search_value;
-
-}
+const AllTypeVariant& TableScan::search_value() const { return _search_value; }
 
 std::shared_ptr<const Table> TableScan::_on_execute() {
 
   const auto in_table = _input_table_left();
   auto out_table = std::make_shared<Table>();
-  //auto posList = std::make_shared<PosList>();
   auto posList = PosList();
   
   auto comparator = [](ScanType scanType, auto left, auto right) {
-  switch (scanType) {
-    case ScanType::OpEquals: {
+    switch (scanType) {
+      case ScanType::OpEquals: {
         return left == right;
         break;
       }
@@ -93,73 +85,72 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
               posList.emplace_back(RowID{i, ChunkOffset(index)});
             };
           }
-          return;
-      }
+        }
 
       const auto typed_dict_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
-      if(typed_dict_segment != nullptr) {
+      if (typed_dict_segment != nullptr) {
         auto attribute_vector = typed_dict_segment->attribute_vector();
         ValueID size = static_cast<ValueID>(attribute_vector->size());
 
-        switch(scan_type()) {
+        switch (scan_type()) {
           case ScanType::OpEquals: {
             auto value = typed_dict_segment->find_in_dict(search_value());
             for (auto index = ValueID(0); index < size; index++) {
               auto attribute = typed_dict_segment->attribute_vector()->get(i);
-              if (attribute == value){
+              if (attribute == value) {
                 posList.emplace_back(RowID({i, ChunkOffset(index)}));
               }
-            };
+            }
             break;
           }
           case ScanType::OpNotEquals: {
             auto value = typed_dict_segment->find_in_dict(search_value());
             for (auto index = ValueID(0); index < size; index++) {
               auto attribute = typed_dict_segment->attribute_vector()->get(i);
-              if (attribute != value){
+              if (attribute != value) {
                 posList.emplace_back(RowID({i, ChunkOffset(index)}));
               }
-            };
+            }
             break;
           }
           case ScanType::OpLessThan: {
             auto value = typed_dict_segment->find_in_dict(search_value());
             for (auto index = ValueID(0); index < size; index++) {
               auto attribute = typed_dict_segment->attribute_vector()->get(i);
-              if (attribute < value){
+              if (attribute < value) {
                 posList.emplace_back(RowID({i, ChunkOffset(index)}));
               }
-            };
+            }
             break;
           }
           case ScanType::OpLessThanEquals: {
             auto value = typed_dict_segment->find_in_dict(search_value());
             for (auto index = ValueID(0); index < size; index++) {
               auto attribute = typed_dict_segment->attribute_vector()->get(i);
-              if (attribute <= value){
+              if (attribute <= value) {
                 posList.emplace_back(RowID({i, ChunkOffset(index)}));
               }
-            };
+            }
             break;
           }
           case ScanType::OpGreaterThan: {
             auto value = typed_dict_segment->find_in_dict(search_value());
             for (auto index = ValueID(0); index < size; index++) {
               auto attribute = typed_dict_segment->attribute_vector()->get(i);
-              if (attribute > value){
+              if (attribute > value) {
                 posList.emplace_back(RowID({i, ChunkOffset(index)}));
               }
-            };
+            }
             break;
           }
           case ScanType::OpGreaterThanEquals: {
             auto value = typed_dict_segment->find_in_dict(search_value());
             for (auto index = ValueID(0); index < size; index++) {
               auto attribute = typed_dict_segment->attribute_vector()->get(i);
-              if (attribute >= value){
+              if (attribute >= value) {
                 posList.emplace_back(RowID({i, ChunkOffset(index)}));
               }
-            };
+            }
             break;
           }
         }
@@ -187,7 +178,6 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
             };
         }
       }
-      
       }
     });
   }
@@ -205,4 +195,4 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   return out_table;
 }
 
-} //namespace opossum
+}  //  namespace opossum

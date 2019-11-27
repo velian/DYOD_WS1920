@@ -7,13 +7,13 @@
 #include <utility>
 #include <vector>
 
-#include "type_cast.hpp"
 #include "base_segment.hpp"
-#include "value_segment.hpp"
 #include "dictionary_segment.hpp"
 #include "table.hpp"
+#include "type_cast.hpp"
 #include "types.hpp"
 #include "utils/assert.hpp"
+#include "value_segment.hpp"
 
 namespace opossum {
 
@@ -42,7 +42,6 @@ class ReferenceSegment : public BaseSegment {
   const std::shared_ptr<const Table> _referenced_table;
   const ColumnID _referenced_column_id;
   const std::shared_ptr<const PosList> _pos_list;
-
 };
 
 }  // namespace opossum
